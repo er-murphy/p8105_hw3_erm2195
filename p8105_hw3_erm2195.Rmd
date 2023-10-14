@@ -4,8 +4,6 @@ output: github_document
 date: "2023-10-10"
 ---
 
-This homework includes figures; the readability of embedded plots (e.g. font sizes, axis labels, titles) will be assessed!
-
 ## Library Setup
 Loading the `patchwork`, `p8105 datasets`, and `tidyverse` libraries for later use.
 
@@ -59,7 +57,7 @@ Creating a table to visualize the number of aisles and the total number of items
 instacart |> 
   count(aisle) |> 
   arrange(desc(n)) |> 
-  knitr::kable("Most Commonly Ordered-from Aisles")
+  knitr::kable(caption = "Most Commonly Ordered-from Aisles")
 ```
 
 In total, there are `r instacart |> count(aisle) |> arrange(desc(n)) |> nrow()` aisles, and the two most commonly ordered-from aisles are `r instacart |> count(aisle) |> arrange(desc(n)) |> slice(1) |> pull(aisle)` and `r instacart |> count(aisle) |> arrange(desc(n)) |> slice(2) |> pull(aisle)`.
@@ -100,7 +98,7 @@ instacart |>
   ) |> 
   filter(rank < 4) |> 
   arrange(desc(n)) |> 
-  knitr::kable(label = "Most Popular Baking, Dog Food, and Packaged Fruits/Vegetables Items" )
+  knitr::kable(caption = "Most Popular Baking, Dog Food, and Packaged Fruits/Vegetables Items" )
 
 ```
 
@@ -118,7 +116,7 @@ instacart |>
     names_from = order_dow, 
     values_from = avg_hour
   ) |>
-  knitr::kable(digits = 2, label = "Average Purchase Time Per Day of the Week")
+  knitr::kable(digits = 2, caption = "Average Purchase Time Per Day of the Week")
 
 ```
 
@@ -164,6 +162,9 @@ brfss =
 
 ```
 
+## Describing the `brfss` Dataset
+The `brfss` dataset has `r nrow(brfss)` observations and `r ncol(brfss)` variables. It contains information about health status and risk factors from a continuous, state-based surveillance system, with observations from `r brfss |> pull(year) |> min()` to `r brfss |> pull(year) |> max()`. The dataset includes variables such as the state and county of observation, the prevalence of each response option ("Excellent", "Very Good", "Good", "Fair", and "Poor") per question, and the latitude/longitude of observation sites. In total, there are `r brfss |> select(county) |> distinct() |> count()` observation sites included in the dataset. 
+
 # States Observed at 7 or More Locations
 Identifying the states observed at 7 or more locations in 2002 and 2010. Doing this by filtering to the year of interest, then counting the number of distinct counties observed for each state. Then, arranging the states and associated counts in descending order, and selecting only those with a count of 7 or greater.
 
@@ -198,7 +199,7 @@ In comparison, in 2010, these `r brfss |> filter(year == 2010) |> group_by(state
 `r (brfss |> filter(year == 2010) |> group_by(state) |> select(county) |> distinct() |> count() |> arrange(desc(n)) |> filter(n >= 7) |> nrow()) - (brfss |> filter(year == 2002) |> group_by(state) |> select(county) |> distinct() |> count() |> arrange(desc(n)) |> filter(n >= 7) |> nrow())` additional states were observed at 7 or more locations in 2010 compared to 2002. Of those observed in 2002, only Connecticut wasn't similarly observed at 7 or more locations in 2010.
 
 # Plotting Prevalence of Excellent Responses Across State Locations
-Constructing a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. 
+Constructing a dataset that is limited to Excellent responses, and contains, `year`, `state`, and a variable `avg_excellence` that averages the data value across locations within a state. Using `distinct()` to collapse states to a single row each, as otherwise there would be a repeated `avg_excellence` value for as many counties were observed within that state.
 
 ```{r}
 brfss_excellent =
@@ -213,7 +214,7 @@ brfss_excellent =
 
 ```
 
-Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+Making a spaghetti plot of this average response value over time within each state:
 
 ```{r}
 ggplot(brfss_excellent, aes(x = year, y = avg_excellence, group = state, color = state)) +
@@ -228,10 +229,10 @@ ggplot(brfss_excellent, aes(x = year, y = avg_excellence, group = state, color =
 
 ```
 
-From the spaghetti plot, we can see that West Virginia consistently has the lowest, if not nearly the lowest, average prevalence of "Excellent" responses to questions asking about overall health. In contrast, DC and Connecticut are generally in the top of the pack for prevalence of "Excellent" responses. Across the country as a whole, it appears that there's a slight decline in the prevalence of "Excellent" responses from 2002 to 2010. 
+From the spaghetti plot, we can see that West Virginia consistently has the lowest, or nearly the lowest, average prevalence of "Excellent" responses to questions asking about overall health. In contrast, DC and Connecticut are generally in the top of the pack for prevalence of "Excellent" responses. Across the country as a whole, it appears that there's a slight decline in the prevalence of "Excellent" responses from 2002 to 2010. 
 
 # Plotting Distribution of Responses in NY State in 2006 and 2010
-Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+Making a two-panel plot showing, for the years 2006, and 2010, the distribution of data value for responses (“Poor” to “Excellent”) among locations in NY State:
 
 ```{r}
 brfss |> 
@@ -248,12 +249,11 @@ brfss |>
   ) 
 ```
 
+From the plot, we can see that the position of responses in relation to each other remained the same between 2006 and 2010. In both years, "Good" was the most common response, followed by "Excellent" and then "Fair". The mdian prevalence of each response option also remained nearly the same in the two time periods, although the upper and lower quartiles around those medians did change; for example, in 2006, the 75% quartile for the "Good" response was nearly 35, while in 2010 it was closer to 31. 
 
 # Problem 3
 
-Accelerometers can measure MIMS in a short period; one-minute intervals are common. Because accelerometers can be worn comfortably and unobtrusively, they produce around-the-clock observations. This problem uses accelerometer data collected on 250 participants in the NHANES study. Variables MIMS are the MIMS values for each minute of a 24-hour day starting at midnight.
-
-## Reading in Dataset
+## Reading in Data
 
 ```{r}
 mims_accel = 
@@ -270,20 +270,19 @@ mims_covar =
 
 ## Cleaning the `brfss` Dataset
 
-Tidying and merging the two datasets. Specifically:
+Tidying and merging the two MIMS datasets. Specifically:
 
 * Maintaining all originally observed variables
 * Excluding participants younger than 21 years old
-* Recoding the `sex` and `education` variables to be factors, with the latter being ordered
+* Excluding participants missing any demographic data in the `mim_covar` dataset
+* Recoding the `sex` and `education` variables to be factors, with the latter being ordered. Also recoding the `minute` variable to be numeric
 * "Tidying" the `mim_accel` dataset using `pivot_longer` so that each minute is its own row
 * Merging the two datasets such that any participant without demographic data (aka. being in the `mims_covar` dataset) isn't included in the final dataset
-
-* Exclude participants missing demographic data - DISCUSSION BOARD QUESTION RE. THIS
 
 ```{r}
 
 mims_covar_clean = 
-  filter(mims_covar, age >= 21) |> 
+  filter(mims_covar, age >= 21 & (if_any(everything(), is.na)) == FALSE) |> 
   mutate(
     sex = as.factor(case_match(sex,
                                1 ~"male",
@@ -297,25 +296,28 @@ mims_covar_clean =
                        ordered = TRUE)
   )
 
-```
 
-```{r}
 mims_accel_clean = 
   pivot_longer(
     mims_accel, 
     starts_with("min"),
     names_to = "minute",
     names_prefix = "min",
-    values_to = "mims")
-```
+    values_to = "mims") |> 
+  mutate(
+    minute = as.numeric(minute)
+  ) 
 
-```{r}
 mims_merged = 
   left_join(mims_covar_clean, mims_accel_clean, by = "seqn")
+
 ```
 
+## Describing the `mims_merged` Dataset
+The `mims_merged` dataset has `r nrow(mims_merged)` observations and `r ncol(mims_merged)` variables. It contains accelerometer data collected from `r mims_merged |> select(seqn) |> distinct() |> count()` NHANES study participants and has variables containing information about both participant demographics, and their movement activity per minute of a 24-hour day. Participants ranged in age from `r mims_merged |> pull(age) |> min()` to `r mims_merged |> pull(age) |> max()`, and had an average BMI of `r mims_merged |> pull(bmi) |> mean() |> round(digits = 2)`.
+
 ## Visualizing the Age Distributions of Education Categories, by Sex
-Producing a table of the number of men and women in each education category. Because I want to make this table easily readable for humans, I'm using `pivot_wider` to make it "untidy" and have the sexes in different columns. 
+Producing a table of the number of men and women in each of the 3 education categories. Because I want to make this table easily readable for humans, I'm using `pivot_wider` to have the sexes in different columns. 
 
 ```{r}
 mims_covar_clean |> 
@@ -325,11 +327,11 @@ mims_covar_clean |>
     names_from = sex,
     values_from = n
   ) |> 
-  knitr::kable(digits = 2)
+  knitr::kable(caption = "Participant Levels of Education, by Sex")
 
 ```
 
-Create a visualization of the age distributions for men and women in each education category. Comment on these items.
+Creating a visualization of the age distributions for men and women in each education category:
 
 ```{r}
 mims_merged |> 
@@ -343,8 +345,10 @@ mims_merged |>
   ) 
 ```
 
+From the plot, we can see that the age distributions in the "less than high school" and "more than high school" categories are relatively similar between sexes, and that both group share a median of about 60 years old for the former, and about 42 years old for the latter. The most significant difference in age distribution between the genders is in the "high school equivalent" category, in which females have a median age of around 63 years, while males have a much younger median age at around 54 years. 
+
 ## Plotting Total Activity and Age, by Sex and Education
-Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences.
+Aggregating across minutes to create a total activity variable for each participant, then plotting these total activities against age. Including a separate panel for each education level, and differentiating the sexes by color. 
 
 ```{r}
 mims_merged |> 
@@ -359,7 +363,7 @@ mims_merged |>
   geom_smooth(se = FALSE) + 
   facet_grid(. ~ education) +
   labs(
-    title = "Age vs. Total Activity, by Sex and Education Level",
+    title = "Age vs. Total Activity, by Education Level",
     x = "Age (years)",
     y = "MIMS: Total Activity Over a Day",
     caption = "Data from NHANES"
@@ -367,29 +371,26 @@ mims_merged |>
   
 ```
 
-!!!!!!!!!!!!!!!!!!!!!!   COMMENT ON THE PLOT   !!!!!!!!!!!!!!!!!!!!!!
+Across the 3 education categories, total activity in a day appears to generally decrease with age, with 80 years in each education category and sex having less total activity than people in their 20s. In the "less than high school" and "more than high school" education categories, there appears to be a bit of a rebound in total activity after an initial decline in the 20s, although this rebound happens at different ages between the groups. For those with less than a high school education, both males and females start having an increasing trend of total activity in their 50s, though this trend then reverses once into their 60s. For those with more than a high school education, females don't experience much of a decline at all of their total activity until their 60s, while males have a more undulating pattern of decreasing activity until their mid 30s, then increasing activity until their 60s. Participants with the equivalent of a high school education have the biggest gap in total activity between the sexes, with 40 year-old females having around 3,000 more MIMS of activity compared to males of the same age.
 
 ## Plotting Activity Time Courses, by Education
-Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+Making a three-panel plot that shows the 24-hour activity time courses for each education level, differentiating sex by color. Filtering mims values to only include those less than 50, in order to remove some outliers and make the plots more easily readable.
 
 ```{r}
 mims_merged |> 
+  filter(mims < 50) |> 
   ggplot(aes(x = minute, y = mims, color = sex)) +
-  geom_point(alpha = 0.25, size = 0.05) +
+  geom_point(alpha = .1, size = 0.05) +
   geom_smooth(se = FALSE) + 
   facet_grid(. ~ education) +
   labs(
-    title = "Age vs. Total Activity, by Sex and Education Level",
-    x = "Age (years)",
-    y = "MIMS: Total Activity Over a Day",
+    title = "Activity Per Minute Over 24 Hours, By Education Level",
+    x = "Minute of Day",
+    y = "Activity (MIMS)",
     caption = "Data from NHANES"
   )   
 ```
 
+Looking at these plots, we can see that across education categories and sex, activity typically follows a standard pattern of some initial activity at minute 0, then a low around minute 250, and then an increase to a high point around minute 750, before tapering off again slowly. Since these plots depict a 24 hour period beginning at midpoint, this noticeable dip in activity aligns with most individual's sleeping schedules. 
 
-!!!!!!!!!!!!!!!!!!!!!!   COMMENT ON THE PLOT   !!!!!!!!!!!!!!!!!!!!!!
-
-Describe in words any patterns or conclusions you can make based on this graph
-
-
-
+The spike in activity around minute 500 aligns with morning getting-ready/commute time, and is the peak period of activity for every category and sex combination excluding females with more than a high school education. In fact, the "more than high school" education category has the greatest difference in activity by sex. Females in that category engaged in more activity than males in nearly every minute of the 24-hour period. Additionally, females in this category engaged in some of the most consistent activity throughout the day, tapering off only during sleeping hours. Given the socioeconomic associations of a greater than high school education, we can hypothesize that this may be due to white-collar jobs offering more of an opportunity to consistently move around, though it's suprising that this isn't similarly reflected in the activity of the category's males. 
